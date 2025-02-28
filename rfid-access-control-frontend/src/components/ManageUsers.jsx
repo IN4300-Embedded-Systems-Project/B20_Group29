@@ -83,7 +83,7 @@ function ManageUsers() {
         email: newUserEmail,
         rfid: newUserRfid,
         batch: newUserBatch,
-        status: "Allowed",
+        status: "Not Allowed",
       });
       setSnackbarMessage("User added successfully!");
       setSnackbarOpen(true);
@@ -105,7 +105,7 @@ function ManageUsers() {
         email: newUserEmail,
         rfid: newUserRfid,
         batch: newUserBatch,
-        status: "Not Allowed",
+        status: newUserStatus,
       });
       setSnackbarMessage("User updated successfully!");
       setSnackbarOpen(true);
@@ -241,7 +241,6 @@ function ManageUsers() {
           </TableBody>
         </Table>
       </TableContainer>
-      
     </div>
   );
 }

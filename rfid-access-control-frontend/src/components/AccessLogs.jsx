@@ -31,9 +31,27 @@ function AccessLogs() {
           status: data[cardUid]?.Status || "Unknown",
         }));
 
-        // Sort by timestamp (Descending: newest first)
-        const sortedLogs = _.orderBy(logsArray, ["timestamp"], ["desc"]);
+        const parseDate = (timestamp) => {
+          return new Date(
+            timestamp.replace(
+              /(\d{4})-(\d{1,2})-(\d{1,2}) (\d{1,2}):(\d{1,2}):(\d{1,2})/,
+              (match, year, month, day, hour, minute, second) =>
+                `${year}-${month.padStart(2, "0")}-${day.padStart(
+                  2,
+                  "0"
+                )}T${hour.padStart(2, "0")}:${minute.padStart(
+                  2,
+                  "0"
+                )}:${second.padStart(2, "0")}`
+            )
+          );
+        };
 
+        const sortedLogs = _.orderBy(
+          logsArray,
+          [(log) => parseDate(log.timestamp)],
+          ["desc"]
+        );
         setAccessLogs(sortedLogs);
       }
     });

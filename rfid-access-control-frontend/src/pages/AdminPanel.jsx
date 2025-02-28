@@ -15,22 +15,13 @@ import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
 import ManageUsers from "../components/ManageUsers";
 import ManageSchedules from "../components/ManageSchedules";
 import AccessLogs from "../components/AccessLogs";
-import { ref, set, push, onValue } from "firebase/database";
+import ManageDoorLock from "../components/ManageDoorLock"; // New Component
 
 function AdminPanel() {
-  const [users, setUsers] = useState([]);
-  const [newUser, setNewUser] = useState("");
-  const [newUserEmail, setNewUserEmail] = useState("");
-  const [newUserRole, setNewUserRole] = useState("user");
-  const [newUserRfid, setNewUserRfid] = useState("");
-  const [schedules, setSchedules] = useState("");
-  const [accessLogs, setAccessLogs] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [tabIndex, setTabIndex] = useState(0);
   const navigate = useNavigate();
   const auth = getAuth();
-  const [dbusers, setdbUsers] = useState([]);
-
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -41,9 +32,6 @@ function AdminPanel() {
           if (idTokenResult.claims.role === "admin") {
             console.log("User is admin");
             setIsAdmin(true);
-            fetchUsers();
-            fetchSchedules();
-            fetchAccessLogs();
           } else {
             setIsAdmin(false);
             navigate("/");
@@ -57,108 +45,6 @@ function AdminPanel() {
 
     return () => unsubscribe();
   }, [auth, navigate]);
-
-  const fetchUsers = async () => {
-    try {
-      const usersSnapshot = await getDocs(collection(db, "users"));
-      const usersList = usersSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setUsers(usersList);
-    } catch (error) {
-      console.error("Error fetching users: ", error);
-    }
-  };
-
-  const fetchSchedules = async () => {
-    try {
-      const schedulesSnapshot = await getDocs(collection(db, "schedules"));
-      const schedulesList = schedulesSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      console.log(schedulesSnapshot);
-      setSchedules(schedulesList);
-    } catch (error) {
-      console.error("Error fetching schedules: ", error);
-    }
-  };
-
-  const fetchAccessLogs = async () => {
-    try {
-      const logsSnapshot = await getDocs(collection(db, "access_logs"));
-      const logsList = logsSnapshot.docs.map((doc) => doc.data());
-      setAccessLogs(logsList);
-    } catch (error) {
-      console.error("Error fetching access logs: ", error);
-    }
-  };
-
-  const addUser = async (newUser) => {
-    try {
-      await addDoc(collection(db, "users"), {
-        name: newUser.name,
-        email: newUser.email,
-        batch: newUser.batch,
-        rfid: newUser.rfid,
-        status: "active",
-      });
-      fetchUsers();
-    } catch (error) {
-      console.error("Error adding users: ", error);
-    }
-  };
-
-  const removeUser = async (userId) => {
-    await deleteDoc(doc(db, "users", userId));
-    fetchUsers();
-  };
-
-  const addSchedule = async (newSchedule) => {
-    try {
-      await addDoc(collection(db, "schedules"), {
-        labName: newSchedule.labName,
-        batch: newSchedule.batch,
-        description: newSchedule.description,
-        timestamp: newSchedule.timestamp,
-        status: newSchedule.status,
-      });
-      fetchSchedules();
-    } catch (error) {
-      console.error("Error adding schedule: ", error);
-    }
-  };
-
-  const updateSchedule = async (scheduleId, updatedSchedule) => {
-    try {
-      if (!scheduleId) {
-        console.error("Error: Schedule ID is missing.");
-        return;
-      }
-
-      const filteredSchedule = Object.fromEntries(
-        Object.entries(updatedSchedule).filter(([_, v]) => v !== undefined)
-      );
-
-      // Ensure timestamp is in correct format
-      if (filteredSchedule.timestamp) {
-        filteredSchedule.timestamp = new Date(filteredSchedule.timestamp);
-      }
-
-      await updateDoc(doc(db, "schedules", scheduleId), filteredSchedule);
-      console.log("Schedule updated successfully:", filteredSchedule);
-
-      fetchSchedules();
-    } catch (error) {
-      console.error("Error updating schedule: ", error);
-    }
-  };
-
-  const removeSchedule = async (scheduleId) => {
-    await deleteDoc(doc(db, "schedules", scheduleId));
-    fetchSchedules();
-  };
 
   const logout = () => {
     signOut(auth).then(() => {
@@ -211,36 +97,13 @@ function AdminPanel() {
             <Tab label="Manage Users" />
             <Tab label="Manage Schedules" />
             <Tab label="Access Logs" />
+            <Tab label="Manual Door Lock" /> {/* New Tab */}
           </Tabs>
 
-          {tabIndex === 0 && (
-            <ManageUsers
-              {...{
-                users,
-                dbusers,
-                newUser,
-                setNewUser,
-                newUserEmail,
-                setNewUserEmail,
-                newUserRfid,
-                setNewUserRfid,
-                newUserRole,
-                setNewUserRole,
-                addUser,
-                removeUser,
-              }}
-            />
-          )}
-          {tabIndex === 1 && (
-            <ManageSchedules
-              schedules={schedules}
-              setSchedules={setSchedules}
-              addSchedule={addSchedule}
-              updateSchedule={updateSchedule}
-              removeSchedule={removeSchedule}
-            />
-          )}
-          {tabIndex === 2 && <AccessLogs accessLogs={dbusers} />}
+          {tabIndex === 0 && <ManageUsers />}
+          {tabIndex === 1 && <ManageSchedules />}
+          {tabIndex === 2 && <AccessLogs />}
+          {tabIndex === 3 && <ManageDoorLock />} {/* New Component */}
         </div>
       </div>
     </div>
